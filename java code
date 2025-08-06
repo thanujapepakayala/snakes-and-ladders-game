@@ -1,0 +1,148 @@
+import java.util.*;
+
+class Player {
+    String name;
+    int position;
+
+    Player(String name) {
+        this.name = name;
+        this.position = 1;
+    }
+}
+
+public class SnakesAndLadders {
+    static final int WIN_POSITION = 100;
+    static Map<Integer, Integer> snakes = new HashMap<>();
+    static Map<Integer, Integer> ladders = new HashMap<>();
+    static Random rand = new Random();
+    static Scanner sc = new Scanner(System.in);
+    static String[][] boardGrid = new String[10][10];
+    static List<Player> players = new ArrayList<>();
+
+    public static void main(String[] args) {
+        System.out.print("Enter number of players: ");
+        int n = sc.nextInt();
+        sc.nextLine();
+
+        for (int i = 0; i < n; i++) {
+            System.out.print("Enter player " + (i + 1) + " name: ");
+            players.add(new Player(sc.nextLine()));
+        }
+
+        setupSnakesAndLadders();
+        generateEmptyBoard();
+        placePlayersOnBoard();
+        displayBoard(); // Display board only once at the start
+        playGame();
+    }
+
+    static void setupSnakesAndLadders() {
+        snakes.put(99, 21);
+        snakes.put(95, 75);
+        snakes.put(92, 88);
+        snakes.put(89, 68);
+        snakes.put(74, 53);
+        snakes.put(62, 19);
+        snakes.put(49, 11);
+        snakes.put(46, 25);
+
+        ladders.put(2, 38);
+        ladders.put(7, 14);
+        ladders.put(8, 31);
+        ladders.put(15, 26);
+        ladders.put(21, 42);
+        ladders.put(28, 84);
+        ladders.put(36, 44);
+        ladders.put(51, 67);
+        ladders.put(71, 91);
+        ladders.put(78, 98);
+    }
+
+    static void generateEmptyBoard() {
+        for (int row = 0; row < 10; row++) {
+            for (int col = 0; col < 10; col++) {
+                int pos = (row % 2 == 0) ? (100 - (row * 10 + col)) : (100 - (row * 10 + (9 - col)));
+                if (snakes.containsKey(pos)) boardGrid[row][col] = " S ";
+                else if (ladders.containsKey(pos)) boardGrid[row][col] = " L ";
+                else boardGrid[row][col] = "   ";
+            }
+        }
+    }
+
+    static void placePlayersOnBoard() {
+        for (Player player : players) {
+            int pos = player.position;
+            int row = 9 - (pos - 1) / 10;
+            int col = ((row % 2 == 0) ? (pos - 1) % 10 : 9 - (pos - 1) % 10);
+            boardGrid[row][col] = " " + player.name.charAt(0) + " ";
+        }
+    }
+
+    static void clearPreviousPlayerPositions() {
+        for (int row = 0; row < 10; row++) {
+            for (int col = 0; col < 10; col++) {
+                int pos = (row % 2 == 0) ? (100 - (row * 10 + col)) : (100 - (row * 10 + (9 - col)));
+                if (snakes.containsKey(pos)) boardGrid[row][col] = " S ";
+                else if (ladders.containsKey(pos)) boardGrid[row][col] = " L ";
+                else boardGrid[row][col] = "   ";
+            }
+        }
+    }
+
+    static void displayBoard() {
+        System.out.println("\nCurrent Board:");
+        for (int row = 0; row < 10; row++) {
+            for (int col = 0; col < 10; col++) {
+                System.out.print("+----");
+            }
+            System.out.println("+");
+            for (int col = 0; col < 10; col++) {
+                System.out.print("|" + boardGrid[row][col]);
+            }
+            System.out.println("|");
+        }
+        for (int col = 0; col < 10; col++) {
+            System.out.print("+----");
+        }
+        System.out.println("+");
+    }
+
+    static void playGame() {
+        boolean gameWon = false;
+        while (!gameWon) {
+            for (Player player : players) {
+                System.out.println("\n" + player.name + "'s turn. Press Enter to roll the dice.");
+                sc.nextLine();
+
+                int dice = rand.nextInt(6) + 1;
+                int nextPos = player.position + dice;
+                System.out.println(player.name + " rolled a " + dice);
+
+                if (nextPos > WIN_POSITION) {
+                    System.out.println("Can't move. Need exact number to reach 100.");
+                } else {
+                    player.position = nextPos;
+                    if (snakes.containsKey(player.position)) {
+                        System.out.println("Snake! Down to " + snakes.get(player.position));
+                        player.position = snakes.get(player.position);
+                    } else if (ladders.containsKey(player.position)) {
+                        System.out.println("Ladder! Up to " + ladders.get(player.position));
+                        player.position = ladders.get(player.position);
+                    } else {
+                        System.out.println("Moved to position " + player.position);
+                    }
+
+                    clearPreviousPlayerPositions();
+                    placePlayersOnBoard(); // update player markers
+                    displayBoard(); // show updated positions
+
+                    if (player.position == WIN_POSITION) {
+                        System.out.println("\n🎉🎉 " + player.name + " wins the game! 🎉🎉");
+                        gameWon = true;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+}
